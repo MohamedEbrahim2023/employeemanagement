@@ -1,33 +1,27 @@
 #!/usr/bin/env node
 /**
  * Safe Server-Side Initial Administrator Provisioning Script
- * Usage:
- *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... ADMIN_EMAIL=... ADMIN_NAME="..." node scripts/provision-admin.mjs
- *
- * Security Invariants:
- * - Never hardcodes permanent administrator passwords.
- * - Requires SUPABASE_SERVICE_ROLE_KEY in server environment.
- * - Invokes the protected `public.provision_initial_admin` RPC.
+ * Supports both SUPABASE_SECRET_KEY and SUPABASE_SERVICE_ROLE_KEY.
  */
 import crypto from 'node:crypto';
 
 async function main() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminName = process.env.ADMIN_NAME || 'System Administrator';
   const orgName = process.env.ORG_NAME || 'Nukhba Enterprise Holding';
   const orgSlug = process.env.ORG_SLUG || 'nukhba-enterprise';
 
-  if (!supabaseUrl || !serviceRoleKey || !adminEmail) {
+  if (!supabaseUrl || !secretKey || !adminEmail) {
     console.error(
-      'ERROR: Missing required environment variables (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL).'
+      'ERROR: Missing required environment variables (SUPABASE_URL, SUPABASE_SECRET_KEY, ADMIN_EMAIL).'
     );
     process.exit(1);
   }
 
   const { createClient } = await import('@supabase/supabase-js');
-  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+  const supabaseAdmin = createClient(supabaseUrl, secretKey, {
     auth: { autoRefreshToken: false, persistSession: false }
   });
 
@@ -58,7 +52,6 @@ async function main() {
     process.exit(1);
   }
 
-  // Send password reset / setup link so no permanent password is ever stored in logs
   await supabaseAdmin.auth.admin.generateLink({
     type: 'recovery',
     email: adminEmail.trim().toLowerCase()

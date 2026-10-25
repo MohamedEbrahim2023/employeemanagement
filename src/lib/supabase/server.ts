@@ -35,6 +35,11 @@ export function createSupabaseServerClient() {
   });
 }
 
+/**
+ * Server-only privileged Supabase Admin client.
+ * Supports both SUPABASE_SECRET_KEY (new format) and SUPABASE_SERVICE_ROLE_KEY.
+ * Strictly guarded from client bundle imports.
+ */
 export function createSupabaseServiceRoleClient() {
   if (typeof window !== 'undefined') {
     throw new Error('SECURITY_VIOLATION: Secret / Service role client must never run in the browser.');
