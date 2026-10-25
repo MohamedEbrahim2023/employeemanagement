@@ -1,7 +1,13 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 
 const PUBLIC_ROUTES = ['/login', '/reset-password', '/setup-password'];
+
+interface CookieToSet {
+  name: string;
+  value: string;
+  options: CookieOptions;
+}
 
 export function sanitizeRedirectPath(redirectParam: string | null, role: 'admin' | 'employee'): string {
   const fallback = role === 'admin' ? '/admin' : '/employee';
@@ -19,7 +25,7 @@ export function sanitizeRedirectPath(redirectParam: string | null, role: 'admin'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (PUBLIC_ROUTES.some((route) => pathname.startsWith(route))) {
+  if (PUBLIC_ROUTES.some((route: string) => pathname.startsWith(route))) {
     return NextResponse.next();
   }
 
@@ -27,23 +33,26 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers }
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value);
-            response.cookies.set(name, value, options);
-          });
-        }
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL)!;
+  const publishableKey = (
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.SUPABASE_PUBLISHABLE_KEY
+  )!;
+
+  const supabase = createServerClient(url, publishableKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet: CookieToSet[]) {
+        cookiesToSet.forEach(({ name, value, options }: CookieToSet) => {
+          request.cookies.set(name, value);
+          response.cookies.set(name, value, options);
+        });
       }
     }
-  );
+  });
 
   const {
     data: { user }
@@ -55,7 +64,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Verify active profile and trusted role server-side
   const { data: profile } = await supabase
     .from('profiles')
     .select('account_status, deleted_at')
@@ -73,7 +81,7 @@ export async function middleware(request: NextRequest) {
     .eq('user_id', user.id)
     .single();
 
-  const role = roleRecord?.role ?? 'employee';
+  const role = (roleRecord?.role as 'admin' | 'employee' | undefined) ?? 'employee';
 
   if (pathname.startsWith('/admin') && role !== 'admin') {
     return NextResponse.redirect(new URL('/employee', request.url));
