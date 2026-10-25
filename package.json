@@ -1,0 +1,49 @@
+{
+  "name": "employee-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise Employee Management and Task Tracking System (Next.js App Router + Supabase PostgreSQL/Auth/RLS/Realtime)",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "node scripts/lint-check.mjs",
+    "typecheck": "node scripts/type-check.mjs",
+    "test": "node --test tests/**/*.test.mjs",
+    "test:phase1": "node --test tests/phase1/*.test.mjs",
+    "test:phase2": "node --test tests/phase2/*.test.mjs",
+    "test:phase3": "node --test tests/phase3/*.test.mjs",
+    "test:phase4": "node --test tests/phase4/*.test.mjs",
+    "test:phase5": "node --test tests/phase5/*.test.mjs",
+    "test:phase6": "node --test tests/phase6/*.test.mjs",
+    "test:phase7": "node --test tests/phase7/*.test.mjs",
+    "provision:admin": "node scripts/provision-admin.mjs"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
+    "@supabase/ssr": "^0.5.1",
+    "@supabase/supabase-js": "^2.45.4",
+    "@tanstack/react-table": "^8.20.5",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.446.0",
+    "next": "14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0",
+    "recharts": "^2.12.7",
+    "tailwind-merge": "^2.5.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "@types/react": "^18.3.10",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.15",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "typescript": "^5.6.2"
+  }
+}
